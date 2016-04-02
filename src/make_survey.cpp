@@ -73,6 +73,7 @@ main( int argc, char *argv[] )
     SPLINE *spl;
     MANGLE_PLY *ply;
     double rmin, rmax;
+    double rsd_factor;
 
     fdi = NULL;
     ply = NULL;
@@ -239,6 +240,9 @@ main( int argc, char *argv[] )
         fprintf( stderr, "make_survey>   INFO:   %s\n", file_info );
         CHECK_FREE( file_info );
     }
+    
+    /* rsd factor = 1/(aH)*/
+    rsd_factor = ( 1.0 + conf->zin ) / cosmo_Hz(cosmo, conf->zin);
 
     /* Read from ASCII text file, one line at a time */
     fprintf( stderr, "make_survey> PROCESSING line-by-line...\n" );
@@ -247,7 +251,7 @@ main( int argc, char *argv[] )
         double x[3], v[3];      /* original coordinates */
         double rx[3], rv[3];    /* remapped coordinates */
         double z, rad, vel;     /* radius and velocity */
-        double delta_z, z_real, z_red;
+        double rad_redshift, z_real, z_red;
         double ra, dec, weight = 1.0;
         double ran1 = 0.0, ran2 = 0.0, prob = 1.0;
         int flag_sat, id_halo;
@@ -335,8 +339,12 @@ main( int argc, char *argv[] )
         z_real = spline_eval( spl, rad );
 
         /* redshift distortion: need velocity in physical units */
-        delta_z = vel * ( 1.0 + conf->zin ) / SPEED_OF_LIGHT;
-        z_red = z_real + delta_z;
+        rad_redshift = rad + vel * rsd_factor; 
+        if ( conf->zspace )
+            if (rad_redshift < rmin || rad_redshift > rmax)
+                continue;
+        
+        z_red = spline_eval( spl, rad_redshift);
 
         if( conf->zspace )
             z = z_red;
@@ -356,7 +364,7 @@ main( int argc, char *argv[] )
                 continue;
             }
         }
-	nbar_current = nbartot*prob;
+    nbar_current = nbartot*prob;
 
         /* so all redshift / radial selection is now done, check sky next */
 
@@ -395,8 +403,8 @@ main( int argc, char *argv[] )
 
         /* output mock point on sky */
         //fprintf( fdout, "%10.6f % 10.6f %10.7f\n", ra, dec, z );
-	// JLT adds stuff
-	wfkp = 1/(1+nbar_current*conf->powspec);
+    // JLT adds stuff
+    wfkp = 1/(1+nbar_current*conf->powspec);
 
         fprintf( fdout, "%10.6f %10.6f %10.7f %10.7f  %.5e  %.5e\n", ra, dec, z ,weight, nbar_current, wfkp);
         if( conf->make_info > 0 ) {
