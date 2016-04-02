@@ -161,4 +161,13 @@ cosmo_dist_co_los( COSMO const *const c, const double z )
     return cosmo_dist_hubble( c ) * res;
 }
 
+static inline double
+cosmo_Hz( COSMO const *const c, const double z )
+{
+    double h;
+    h = c->h;
+    return 100.*h * cosmo_chi(c, z);
+}
+
+
 #endif
