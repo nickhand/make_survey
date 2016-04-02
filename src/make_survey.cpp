@@ -396,6 +396,7 @@ main( int argc, char *argv[] )
 
             /* downsample to the weight */
             if( conf->downsample_sky ) {
+                nbar_current *= weight; /* downsample nbar by sky completeness */
                 if( ran2 > weight )
                     continue;
             }
