@@ -251,7 +251,7 @@ main( int argc, char *argv[] )
         double x[3], v[3];      /* original coordinates */
         double rx[3], rv[3];    /* remapped coordinates */
         double z, rad, vel;     /* radius and velocity */
-        double rad_redshift, z_real, z_red;
+        double rad_redshift, z_real, z_red(0.);
         double ra, dec, weight = 1.0;
         double ran1 = 0.0, ran2 = 0.0, prob = 1.0;
         int flag_sat, id_halo;
@@ -340,17 +340,14 @@ main( int argc, char *argv[] )
 
         /* redshift distortion: need velocity in physical units */
         rad_redshift = rad + vel * rsd_factor; 
-        if ( conf->zspace )
+        if ( conf->zspace ) {
             if (rad_redshift < rmin || rad_redshift > rmax)
                 continue;
-        
-        z_red = spline_eval( spl, rad_redshift);
-
-        if( conf->zspace )
+            z_red = spline_eval( spl, rad_redshift );
             z = z_red;
-        else
+        } else
             z = z_real;
-
+    
         /* trim by redshift */
         if( z > conf->zmax )
             continue;
